@@ -40,7 +40,8 @@ int up = 80;
 int down = 110;
 Servo servo_OpenCloseClaw;
 const int ci_OpenCloseClaw_Motor = 11;
-int Opened = 40;
+int Opened2 = 20;
+int Opened1 = 40;
 int Closed = 70;
 
 
@@ -101,6 +102,7 @@ void setup() {
 servo_OpenCloseClaw.write(Closed);
 servo_UpDownClaw.write(up);
 servo_LeftRightClaw.write(OverSlide);
+
 }
 
 
@@ -110,18 +112,19 @@ void loop(){
  while (foundCube == 0){ 
    //Activate all three ultrasonic sensors and determine their readings 
    Ping3(); Ping2(); Ping1();
-   delay(300); 
    Serial.print("First Tracker: "); Serial.print(ul_Echo_Time); Serial.print("\n");
    Serial.print("Second Tracker: "); Serial.print(ul_Echo_TimeTwo); Serial.print("\n");
    Serial.print("Third Tracker: "); Serial.print(ul_Echo_TimeThree); Serial.print("\n");
 
 //Case 1 - Found the cube
-if ((ul_Echo_TimeThree>720) &&(ul_Echo_TimeThree <850)){
+if ((ul_Echo_TimeThree>850) &&(ul_Echo_TimeThree <980)){
 servo_RightMotor.writeMicroseconds(ui_Motors_Stop);
 servo_LeftMotor.writeMicroseconds(ui_Motors_Stop);
 foundCube = 1;
-servo_OpenCloseClaw.write(Opened);
+delay(2000);
 servo_LeftRightClaw.write(OverWall);
+delay(2000);
+servo_OpenCloseClaw.write(Opened2);
 delay(2000);
 servo_UpDownClaw.write(down);
 delay(2000);
@@ -131,47 +134,67 @@ servo_UpDownClaw.write(up);
 delay(2000);
 servo_LeftRightClaw.write(OverSlide);
 delay(2000);
-servo_OpenCloseClaw.write(Opened);
-delay(2000);
+
 Ping3();
 if((ul_Echo_TimeThree>720) &&(ul_Echo_TimeThree <850)){
   foundCube = 0;
 }}
 
 //Case 2 - Straight forward - right distance from the wall and not turning 
-else if ((ul_Echo_Time > 600) && (ul_Echo_TimeTwo >= 380) && (ul_Echo_TimeTwo <= 460)){
+else if ((ul_Echo_Time > 600) && (ul_Echo_TimeTwo >= 220) && (ul_Echo_TimeTwo <= 310)){
   Serial.print ("Case 1 DRIVE STRAIGHT\n\n");
   servo_RightMotor.writeMicroseconds(ui_Motors_Top_Speed);
   servo_LeftMotor.writeMicroseconds(ui_Motors_Top_Speed);
 }
 
 //Case 3 - Too far from wall, turn in towards wall
-else if ((ul_Echo_TimeTwo > 460) && (ul_Echo_Time > 600)){
+else if ((ul_Echo_TimeTwo > 310) && (ul_Echo_Time > 600)){
   Serial.print("Case 2 MOVE IN\n\n");
-  servo_RightMotor.writeMicroseconds(ui_Motors_Stop);
-  servo_LeftMotor.writeMicroseconds(ui_Motors_Top_Speed);
-  delay(10);
+  servo_RightMotor.writeMicroseconds(1600);
+  servo_LeftMotor.writeMicroseconds(1800);
+  //delay(10);
 }
 
 //Case 4 - Too close to wall, turn away from wall 
-else if ((ul_Echo_TimeTwo < 380) && (ul_Echo_Time > 600) && (ul_Echo_TimeTwo !=0)){
+else if ((ul_Echo_TimeTwo < 220) && (ul_Echo_Time > 600) && (ul_Echo_TimeTwo !=0)){
   Serial.print("Case 3 MOVE AWAY\n\n");
-   servo_RightMotor.writeMicroseconds(ui_Motors_Top_Speed);
-   servo_LeftMotor.writeMicroseconds(ui_Motors_Stop);
-   delay(10);
+   servo_RightMotor.writeMicroseconds(1800);
+   servo_LeftMotor.writeMicroseconds(1600);
+   //delay(10);
 }
 
 //Case 5 - At a corner, turn around the corner 
-else if (ul_Echo_Time<=600 && (ul_Echo_Time != 0)){
+else if (ul_Echo_Time<=320 && (ul_Echo_Time != 0)){
   Serial.print("Case 4 CORNER\n\n");
-  servo_RightMotor.writeMicroseconds(ui_Motors_Top_Speed);
-  servo_LeftMotor.writeMicroseconds(ui_Motors_Stop);
-  delay(2900);
+  while (ul_Echo_Time<=400){
+    Ping1();
+  servo_RightMotor.writeMicroseconds(1400);
+  servo_LeftMotor.writeMicroseconds(1400);
+  delay(100); }
+ while (ul_Echo_Time<=600){
+  
+  servo_RightMotor.writeMicroseconds(1700);
+  servo_LeftMotor.writeMicroseconds(1400);
+  delay(400); 
+  servo_RightMotor.writeMicroseconds(1700);
+  servo_LeftMotor.writeMicroseconds(1700);
+  delay(400); 
+    Ping1();
+  
+  }
+
+  
 }
   }
     Serial.print("END OF FINDING CUBE\n\n");
+  
+  while (foundCube == 1){
+  
+ 
+  
+  
   }
-
+}
 
 // Function to get readings from first ultrasonic sensor 
 void Ping1()
