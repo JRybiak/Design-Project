@@ -68,10 +68,13 @@ void Ping3();
 int foundCube = 0;
 int counter = 0;
 int foundWall = 0;
+int TurnCounter = 1;
 
 //Some additional functions
 void TurnCorner();
 void GrabTheCube();
+void TipThePyramid();
+void FullTurn(int TurnCounter);
 
 
 //To setup components of the program 
@@ -107,6 +110,10 @@ void setup() {
 servo_OpenCloseClaw.write(Closed);
 servo_UpDownClaw.write(up);
 servo_LeftRightClaw.write(OverSlide);
+
+
+//Setup the Infrared sensor
+pinMode (A0, INPUT);
 
 }
 
@@ -185,7 +192,7 @@ if((ul_Echo_TimeThree>720) &&(ul_Echo_TimeThree <850)){
 }}
 
 //Case 2 - Straight forward - right distance from the wall and not turning 
-else if ((ul_Echo_Time > 450)  && (ul_Echo_Time < 600) && (ul_Echo_TimeTwo >= 220) && (ul_Echo_TimeTwo <= 310)){
+else if ((ul_Echo_Time > 450) && (ul_Echo_TimeTwo >= 220) && (ul_Echo_TimeTwo <= 310)){
   Serial.print ("Case 2 DRIVE STRAIGHT\n\n");
   servo_RightMotor.writeMicroseconds(ui_Motors_Top_Speed);
   servo_LeftMotor.writeMicroseconds(ui_Motors_Top_Speed);
@@ -227,13 +234,77 @@ else if (( (ul_Echo_Time > 600) || (ul_Echo_Time == 0)) &&(ul_Echo_TimeTwo > 450
     Serial.print("END OF FINDING CUBE\n\n");
   
   while (foundCube == 1){
+//Case 1 - DRIVE STRAIGHT
+if ( (ul_Echo_Time > 450) ){
+  Serial.print ("Case 2 DRIVE STRAIGHT\n\n");
+  servo_RightMotor.writeMicroseconds(ui_Motors_Top_Speed);
+  servo_LeftMotor.writeMicroseconds(ui_Motors_Top_Speed);
   
- //1. Drive straight until next wall is found 
+} 
+
+//Case 2 - FOUND A SURFACE
+else if (ul_Echo_Time < 450) {
+//Determine if there is a pyramid, and if it's the right one
+Serial.print("Think we found a pyramid, double checking\n");
+      servo_RightMotor.writeMicroseconds(1500);
+      servo_LeftMotor.writeMicroseconds(1500);
+      delay(100);
+
+//Infrared on left side - Communicates with other microcontroller 
+//2 - Wrong Pyramid 
+//1 - Right Pyramid
+//0 - No Pyramid :( 
+byte sensorVal = Serial.read();
+int LeftSensor = sensorVal; //Converts byte to integer
+
+//LOW means pyramid found
+//HIGH means no pyramid
+bool RightSensor = analogRead(A0); 
+
+
+if (RightSensor == 0) {
+Serial.print("It's definitly a pyramid, which one tho\n\n");
+
+int counter2 = 0;
+//Rotate Slightly for other ultrasonic to check 
+while (counter2 < 100 && (sensorVal!=1)){
+//Rotate a little bit at a time
+sensorVal = Serial.read();
+counter++;
+  
+}
+if (sensorVal == 1){
+Serial.print("Right Pyramid\n\n");
+TipThePyramid();
+  
+} else {
+Serial.print("Wrong Pyramid\n\n");
+  
+}
+} else if (sensorVal == 1){
+ Serial.print("RIGHT PYRAMID but on the left side of robot\n\n"); 
+
+}else if (sensorVal == 2){
+ Serial.print("WRONG PYRAMID but on the left side of robot\n\n"); 
+
+}  else if (sensorVal == 0){
+  Serial.print("NO PYRAMID 100% IS A WALL\n\n"); 
+TurnCounter ++;
+TurnCorner(TurnCounter);
+}    
+}
+    
+  
  
- //2. When wall is found, check if actually is a pyramid, check if it's the right pyramid
-  
   
   }
+}
+
+
+void TipThePyramid(){
+
+
+  
 }
 
 
@@ -256,25 +327,27 @@ delay(2000);
 
 void TurnCorner(){
    Serial.print("TURNING THE CORNER\n\n");
-
-   /*
-  
   while (ul_Echo_Time<=400){
     Ping1();
   servo_RightMotor.writeMicroseconds(1400);
   servo_LeftMotor.writeMicroseconds(1400);
   delay(100); }
  while (ul_Echo_Time<=1000){
-  
   servo_RightMotor.writeMicroseconds(1700);
-  servo_LeftMotor.writeMicroseconds(1400);
-  delay(400); 
-  servo_RightMotor.writeMicroseconds(1700);
-  servo_LeftMotor.writeMicroseconds(1700);
-  delay(400); 
+  servo_LeftMotor.writeMicroseconds(1300);
+  delay(200); 
     Ping1();
+  }
+}
+
+void FullTurn(int TurnCounter){
+  if ((TurnCounter%2) == 0){
+    //EVEN so turn LEFT
+  } else {
+    //ODD so turn RIGHT
+    
+  }
   
-  }*/
 }
 
 
