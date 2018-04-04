@@ -1,0 +1,67 @@
+#include <Servo.h>
+#include <uSTimer2.h>
+
+Servo servo_RightMotor;
+const int ci_Right_Motor = 8;
+Servo servo_LeftMotor;
+const int ci_Left_Motor = 9;
+//Motors speeds 
+const int ui_Motors_Stop = 1500; //Stop
+unsigned int ui_Motors_Top_Speed = 2200; //Full Speed
+
+Servo servo_PyramidTipper;
+
+const int pyramidLoc = 13;
+
+const int pyramidDown = 20;
+const int pyramidHalf = 140;
+const int pyramidUp = 180;
+
+int cycle = 0;
+
+void setup() {
+  // put your setup code here, to run once:
+  pinMode(pyramidLoc, OUTPUT);
+  servo_PyramidTipper.attach(pyramidLoc);
+
+  pinMode(ci_Right_Motor, OUTPUT);
+  servo_RightMotor.attach(ci_Right_Motor);
+  pinMode(ci_Left_Motor, OUTPUT);
+  servo_LeftMotor.attach(ci_Left_Motor);
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+
+  if (cycle==0){
+  servo_PyramidTipper.write(40);
+  delay(500);
+  servo_PyramidTipper.write(80);
+  delay(7000);}
+
+  cycle++;
+
+  /*servo_PyramidTipper.write(pyramidUp);
+  delay(3000);
+  servo_PyramidTipper.write(pyramidHalf);
+  delay(3000);
+  servo_PyramidTipper.write(pyramidDown);
+  servo_RightMotor.write(2000);
+  servo_LeftMotor.write(2000);
+  delay(500);
+  servo_RightMotor.write(1500);
+  servo_LeftMotor.write(1500);
+  servo_RightMotor.write(2000);
+  servo_LeftMotor.write(2000);
+  servo_PyramidTipper.write(pyramidHalf);
+  servo_RightMotor.write(1500);
+  servo_LeftMotor.write(1500);
+  servo_OpenCloseClaw.write(Opened);
+  servo_RightMotor.write(1300);
+  servo_LeftMotor.write(1300);
+  servo_PyramidTipper.write(pyramidDown);
+  delay(500);
+  servo_RightMotor.write(1500);
+  servo_LeftMotor.write(1500);
+  servo_PyramidTipper.write(pyramidUp);*/
+}
