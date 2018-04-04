@@ -25,6 +25,16 @@ void setup() {
 }
 
 void loop() {
+  //loop called when found correct pyramid
+  //need global variable to continue updating to check to see if can still see pyramid
+  //if cannot see pyramid:
+  /*  servo_RightMotor.write(1800);
+   *  delay(500);
+   *  servo_RightMotor.write(1500);
+   *  servo_LeftMotor.write(1600); (until sees pyramid again, depending on which side will then continue until Ping1 brings back <3000)
+   *  //only let the checking go on for ten seconds using strategy from earlier labs. then go in some direction and do the pyramid thing
+   */
+  
   do{
     Ping1();
   } while (ul_Echo_Time >=1500);
@@ -33,6 +43,7 @@ void loop() {
   servo_RightMotor.write(1000);
   delay(200);
   servo_RightMotor.write(1500);
+  delay(100000);
   //run get pyramid function
 }
 
