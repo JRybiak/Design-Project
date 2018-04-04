@@ -1,0 +1,49 @@
+#include <Servo.h>
+//#include <uSTimer2.h>
+
+Servo servo_RightMotor;
+const int ci_Right_Motor = 8;
+Servo servo_LeftMotor;
+const int ci_Left_Motor = 9;
+
+const int ci_Ultrasonic_PingOne = 2;   //input plug
+const int ci_Ultrasonic_DataOne = 3;   //output plug
+unsigned long ul_Echo_Time;
+void Ping1();
+
+void setup() {
+  Serial.begin(9600);
+  
+  pinMode(ci_Ultrasonic_PingOne, OUTPUT);
+  pinMode(ci_Ultrasonic_DataOne, INPUT);
+
+  pinMode(ci_Right_Motor, OUTPUT);
+  servo_RightMotor.attach(ci_Right_Motor);
+  pinMode(ci_Left_Motor, OUTPUT);
+  servo_LeftMotor.attach(ci_Left_Motor);
+
+}
+
+void loop() {
+  do{
+    Ping1();
+  } while (ul_Echo_Time >=1500);
+
+  Serial.println("Found it");
+  servo_RightMotor.write(1000);
+  delay(200);
+  servo_RightMotor.write(1500);
+  //run get pyramid function
+}
+
+void Ping1()
+{
+  //Ping Ultrasonic and send the Ultrasonic Range Finder a 10 microsecond pulse per tech spec
+  digitalWrite(ci_Ultrasonic_PingOne, HIGH);
+  delayMicroseconds(10);  //The 10 microsecond pause where the pulse in "high"
+  digitalWrite(ci_Ultrasonic_PingOne, LOW);
+  //use command pulseIn to listen to Ultrasonic_Data pin to record the
+  //time that it takes from when the Pin goes HIGH until it goes LOW
+  ul_Echo_Time = pulseIn(ci_Ultrasonic_DataOne, HIGH, 10000);
+  Serial.println(ul_Echo_Time,DEC);
+}
