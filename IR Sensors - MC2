@@ -1,0 +1,61 @@
+
+
+
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(9600);
+
+  pinMode (A0, INPUT);
+
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+
+  delay(30); // give time for mc1 to send data
+
+  byte sensorVal = Serial.read();
+
+  int Pyramid = sensorVal;
+
+  Serial.print(Pyramid);
+  Serial.print("\n");
+
+
+  //determine if wall is pyramid
+  if (analogRead(A0) == LOW){
+    Serial.print("PYRAMID PYRAMID PYRAMID PYRAMID PYRAMID");
+    Serial.print("\n");
+    // go around
+    
+  }
+  else{
+    Serial.print("not pyramid");
+    Serial.print("\n");
+    // turn corner
+  }
+
+  
+  
+  //determine if right pyramid found
+  if (Serial.available()){
+
+
+    if (Pyramid == 1){
+      //insert tipper code
+      
+    }
+    
+    else if (Pyramid == 2){
+      //insert go around
+      
+    } 
+    
+
+    else {
+      //continue going 
+    }
+   
+  }
+
+}
