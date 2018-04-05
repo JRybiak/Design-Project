@@ -445,6 +445,20 @@ if (sensorVal == 1){
  Serial.print("Case 3.3 - Left infrared right pyramid\n\n"); 
  CounterTWO = 0;
 counterFOUR = 0;
+  servo_PyramidTipper.write(180);
+  delay (5000);
+  servo_RightMotor.write(2000);
+  servo_LeftMotor.write(1500);
+  delay (250);
+  servo_RightMotor.write(1500);
+  servo_LeftMotor.write(1500);
+  delay (250);
+  servo_RightMotor.write(1200);
+  servo_LeftMotor.write(1200);
+  delay (667);
+  servo_RightMotor.write(1500);
+  servo_LeftMotor.write(1500);
+  delay (100);
  TipThePyramid();
 
 }
@@ -513,6 +527,14 @@ while (counter3<100){
   }
   if (sensorVal == 1){
      Serial.print("Right Pyramid\n");
+    servo_PyramidTipper.write(180);
+  delay (5000);
+  servo_RightMotor.write(1200);
+  servo_LeftMotor.write(1200);
+  delay (667);
+  servo_RightMotor.write(1500);
+  servo_LeftMotor.write(1500);
+  delay (100);
  TipThePyramid();
  counter3 = 101;
   }
@@ -527,22 +549,32 @@ counter3++;
 
 
 void TipThePyramid(){
-  servo_PyramidTipper.write(180);
+  servo_PyramidTipper.write(110);
   delay(2000);
-  servo_PyramidTipper.write(100);
+  servo_PyramidTipper.write(95);
   delay(1000);
-  servo_PyramidTipper.write(10);
   servo_RightMotor.write(1200);
   servo_LeftMotor.write(1200);
+  delay(100);
+  servo_PyramidTipper.write(0);
   delay(1000);
   servo_RightMotor.write(1500);
   servo_LeftMotor.write(1500);
   delay (500);
-  servo_PyramidTipper.write(60);
+  servo_PyramidTipper.write(0);
+  delay (500);
+  servo_PyramidTipper.write(20);
+  delay (500);
+  servo_PyramidTipper.write(40);
+  delay (500);
+  servo_PyramidTipper.write(55);
+  delay(500);
+  servo_PyramidTipper.write(65);
+  delay(2000);
   servo_OpenCloseClaw.write(Opened1);
-  delay (1000);
-  servo_PyramidTipper.write(10);
-  delay(1000);
+  delay (2000);
+  servo_PyramidTipper.write(0);
+  delay(3000);
 }
 
 
