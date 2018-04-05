@@ -79,9 +79,9 @@ const int pyramidHalf = 140;
 const int pyramidUp = 180;
 
 //Additional Variables
-int foundCube = 1;
+int foundCube = 0;
 int counter = 1;
-int foundWall = 1;
+int foundWall = 0;
 int TurnCounter = 1;
 
 int sixcounter = 0;
@@ -232,7 +232,7 @@ while (foundWall == 0){
 //Stage 2 - Looking for the cube
  while ((foundCube == 0) && (foundWall == 1)){ 
 
- if (fivecounter > 10 || twocounter > 50 || threecounter > 50 || fourcounter >50 || sixcounter > 50){
+ if (fivecounter > 100 || twocounter > 50 || threecounter > 50 || fourcounter >50 || sixcounter > 50){
 
  Serial.print("SPECIAL CASE - He's stuck \n\n");
   servo_RightMotor.write(2200);
@@ -262,7 +262,7 @@ while (foundWall == 0){
 
 
 //Case 2.1 - Found the cube
-if ((ul_Echo_TimeThree>100) &&(ul_Echo_TimeThree <980)){
+if ((ul_Echo_TimeThree>100) &&(ul_Echo_TimeThree <980)) { 
   Serial.print ("Case 2.1 - Found The Cube \n\n");  
 servo_RightMotor.writeMicroseconds(ui_Motors_Stop);
 servo_LeftMotor.writeMicroseconds(ui_Motors_Stop);
@@ -307,19 +307,34 @@ delay(300); Ping3();
 if((ul_Echo_TimeThree>850) &&(ul_Echo_TimeThree <980)){
   foundCube = 0;
 }
+delay(300); Ping3();
+if((ul_Echo_TimeThree>850) &&(ul_Echo_TimeThree <980)){
+  foundCube = 0;
+}
+delay(300); Ping3();
+if((ul_Echo_TimeThree>850) &&(ul_Echo_TimeThree <980)){
+  foundCube = 0;
+}
 }
 
 //Case 2.5 - At a corner, turn around the corner 
-else if (ul_Echo_Time <=600 && (ul_Echo_Time != 0)){
-  Serial.print("Case 2.5 - Turn Corner\n\n");
+else if (ul_Echo_Time <=1000 && (ul_Echo_Time != 0)){
+  servo_RightMotor.writeMicroseconds(2050);
+    servo_LeftMotor.writeMicroseconds(1300);
+    delay(100);
+   servo_RightMotor.writeMicroseconds(1500);
+   servo_LeftMotor.writeMicroseconds(1500);
+   delay(20);
+  
+  /*Serial.print("Case 2.5 - Turn Corner\n\n");
   servo_RightMotor.writeMicroseconds(2050);
     servo_LeftMotor.writeMicroseconds(1300);
     delay(1300);
    servo_RightMotor.writeMicroseconds(1500);
    servo_LeftMotor.writeMicroseconds(1500);
    delay(100);
-
- fivecounter ++;  
+ */
+ fivecounter  ++;  
  twocounter = 0;  
  threecounter =0;
  fourcounter = 0;
@@ -364,7 +379,7 @@ else if ((ul_Echo_TimeTwo < 220)){
 }
 
 //Case 2.6 - Nowhere to be found 
-else if (ul_Echo_TimeTwo > 1500){
+else if (ul_Echo_TimeTwo > 2200){
  servo_RightMotor.writeMicroseconds(1500);
    servo_LeftMotor.writeMicroseconds(1500);
    delay(200);
@@ -389,8 +404,33 @@ else if (ul_Echo_TimeTwo > 1500){
 //Serial.print("*** STAGE 3 - DELIVER CUBE ***\n\n");
 byte sensorVal = Serial.read();
 int LeftSensor = sensorVal; //Converts byte to integer
+int CounterTWO = 0;
+int counterFOUR = 0;
+
+
 
 while (foundCube == 1){
+
+ if ( (CounterTWO = 0) || (counterFOUR == 30)){
+
+ Serial.print("SPECIAL CASE - He's stuck \n\n");
+  servo_RightMotor.write(2200);
+  servo_LeftMotor.write(2200);
+  delay (2000);
+  servo_RightMotor.write(2300);
+  servo_LeftMotor.write(1000);
+  delay (2000);
+  servo_RightMotor.write(1000);
+  servo_LeftMotor.write(2300);
+  delay (2000);
+  servo_RightMotor.write(1500);
+  servo_LeftMotor.write(1500);
+  delay(1000);
+  
+ }
+
+
+  
     Ping1();
     sensorVal = Serial.read();
     LeftSensor = sensorVal; //Converts byte to integer
@@ -403,14 +443,18 @@ while (foundCube == 1){
 //CASE 3.3 - Left InfraRed sees the right pyramid
 if (sensorVal == 1){
  Serial.print("Case 3.3 - Left infrared right pyramid\n\n"); 
+ CounterTWO = 0;
+counterFOUR = 0;
  TipThePyramid();
 
 }
 
 
-//CASE 3.4 - Left InfraRed sees the right pyramid
+//CASE 3.4 - Left InfraRed sees the wrong pyramid
 else if (sensorVal == 2){
  Serial.print("Case 3.4 - Left infrared wrong pyramid\n\n");
+ CounterTWO = 0;
+counterFOUR ++;
  MoveAroundPyramid(); 
 
 }
@@ -418,6 +462,8 @@ else if (sensorVal == 2){
 
 //Case 3.1 - Drive straight
 else if ( (ul_Echo_Time > 600)){
+  CounterTWO = 0;
+counterFOUR = 0;
   Serial.print ("Case 3.1 DRIVE STRAIGHT\n\n");
   servo_RightMotor.writeMicroseconds(2050);
   servo_LeftMotor.writeMicroseconds(2050);
@@ -425,6 +471,8 @@ else if ( (ul_Echo_Time > 600)){
 
 //Case 3.2 - Found a surface from ultrasonic
 else if ( (ul_Echo_Time < 600)  && (ul_Echo_Time !=0)) {
+  CounterTWO ++;
+counterFOUR = 0;
 //Determine if there is a pyramid, and if it's the right one
       servo_RightMotor.writeMicroseconds(1500);
       servo_LeftMotor.writeMicroseconds(1500);
