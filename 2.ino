@@ -43,6 +43,9 @@ const int ci_OpenCloseClaw_Motor = 11;
 int Opened2 = 20;
 int Opened1 = 40;
 int Closed = 70;
+int counter3 = 0;
+int Foundit = 0;
+bool RightSensor = analogRead(A0); 
 
 
 /*** SENSORS ***/
@@ -64,9 +67,17 @@ const int ci_Ultrasonic_DataThree = 7;   //output plug
 unsigned long ul_Echo_TimeThree;
 void Ping3();
 
+Servo servo_PyramidTipper;
+
+//Setup the pyramid Tipper
+const int pyramidLoc = 13;
+const int pyramidDown = 20;
+const int pyramidHalf = 140;
+const int pyramidUp = 180;
+
 //Additional Variables
 int foundCube = 0;
-int counter = 0;
+int counter = 1;
 int foundWall = 0;
 int TurnCounter = 1;
 
@@ -75,6 +86,8 @@ void TurnCorner();
 void GrabTheCube();
 void TipThePyramid();
 void FullTurn(int TurnCounter);
+void turnLeft180();
+void turnLeft180();
 
 
 //To setup components of the program 
@@ -115,200 +128,133 @@ servo_LeftRightClaw.write(OverSlide);
 //Setup the Infrared sensor
 pinMode (A0, INPUT);
 
+//Setup the pyramid tipper motor
+pinMode(pyramidLoc, OUTPUT);
+servo_PyramidTipper.attach(pyramidLoc);
+ 
+
+
 }
 
 
 //Main program 
 void loop(){
 
+//Serial.print("*** STAGE 1 - FIND WALL ***\n\n");
 //Stage 1 - Find the wall so that the robot can begin looking for the cube 
 while (foundWall == 0){
-  delay(400);
-  Ping1();
+  delay(100);
+  //Using only the front ultrasonic 
+  Ping1(); Ping2();
   Serial.print("First Tracker: "); Serial.print(ul_Echo_Time); Serial.print("\n");
-  if (((ul_Echo_Time > 600) || (ul_Echo_Time == 0)) &&(ul_Echo_TimeTwo > 400))  {
-    Serial.print("Looking for the wall\n");
-  servo_RightMotor.writeMicroseconds(ui_Motors_Top_Speed);
-  servo_LeftMotor.writeMicroseconds(ui_Motors_Top_Speed);
-  } else {
-      Serial.print("Think we found it, double checking\n");
+  Serial.print("Second Tracker: "); Serial.print(ul_Echo_TimeTwo); Serial.print("\n");
+  
+  //CASE 1.1 - If somehow close enough to a wall to go on to the next stage
+  if ((ul_Echo_TimeTwo < 400) && (ul_Echo_TimeTwo!=0)){
+    Serial.print("CASE 1.1 - Close to the wall, moving on to stage 2\n\n");
+    foundWall = 1;
+    servo_RightMotor.writeMicroseconds(1500);
+    servo_LeftMotor.writeMicroseconds(1500);
+    delay(100);
+  }
+  //CASE 1.2 - Keep driving straight until a wall is found 
+  else if ((ul_Echo_Time > 600) || (ul_Echo_Time == 0))  {
+    Serial.print("CASE 1.2 - Looking for the wall\n\n");
+    servo_RightMotor.writeMicroseconds(ui_Motors_Top_Speed);
+    servo_LeftMotor.writeMicroseconds(ui_Motors_Top_Speed);
+  } 
+  //CASE 1.3 - If a wall is found 
+  else {
+      Serial.print("CASE 1.3 - Think we found the wall, double checking\n");
       servo_RightMotor.writeMicroseconds(1500);
       servo_LeftMotor.writeMicroseconds(1500);
-      delay(100);
-      Serial.print("Check Side 1");
+      delay(2000);
+          servo_RightMotor.writeMicroseconds(1300);
+      servo_LeftMotor.writeMicroseconds(1300);
+      delay(800);
+      //Check side 1
+      Serial.print("Check Side 1\n");
       servo_RightMotor.writeMicroseconds(1800);
       servo_LeftMotor.writeMicroseconds(1500);
       delay(1000);
       Ping1();
-      if ((ul_Echo_Time < 900)){
-         Serial.print("Check Side 2");
-      servo_RightMotor.writeMicroseconds(1200);
+        servo_RightMotor.writeMicroseconds(1200);
       servo_LeftMotor.writeMicroseconds(1500);
-      delay(300);
+      delay(1000);
+             servo_RightMotor.writeMicroseconds(1500);
+      servo_LeftMotor.writeMicroseconds(1500);
+      delay(1000);
+      RightSensor = analogRead(A0); 
+      if ((ul_Echo_Time < 2000) && (RightSensor == 1)){
+        //Side 1 pass, checking side 2
+         Serial.print("Check Side 2\n");
       servo_RightMotor.writeMicroseconds(1500);
       servo_LeftMotor.writeMicroseconds(1800);
       delay(1000);
       Ping1();
-        if (ul_Echo_Time < 900){
-          Serial.print("Success it's a wall");
+      servo_RightMotor.writeMicroseconds(1500);
+      servo_LeftMotor.writeMicroseconds(1200);
+      delay(1000);
+      
+        if ((ul_Echo_Time < 2000) && (RightSensor == 1)){
+          //CASE 1.3a - Found the wall, move on to next stage
+          Serial.print("CASE 1.3a - Found a wall, moving on to stage 2 after turning a corner\n\n");
              foundWall = 1;
-              TurnCorner();
-               }
+             servo_RightMotor.writeMicroseconds(1700);
+    servo_LeftMotor.writeMicroseconds(1700);
+    delay(1000);
+              servo_RightMotor.writeMicroseconds(1700);
+    servo_LeftMotor.writeMicroseconds(1300);
+    delay(3300); //2300 is 90
+    servo_RightMotor.writeMicroseconds(1500);
+    servo_LeftMotor.writeMicroseconds(1500);
+              }
                else {
-              TurnCorner();
-                 Serial.print("Side 2 failed, not a wall");
-               }
-                  
-               }
-           
+                 Serial.print("CASE 1.3c - Not a wall, failed on side two. Moving around pyramid and restarting stage 1.\n\n");
+             MoveAroundPyramid();
+               }}          
        else {
-         Serial.print("Side 1 failed, not a wall");
-        TurnCorner();
-        }}
-}
-  
+              Serial.print("CASE 1.3b - Not a wall, failed on side one. Moving around pyramid and restarting stage 1.\n\n");
+       MoveAroundPyramid();
+        }}}
 
+ 
+//Serial.print("*** STAGE 2 - FIND CUBE ***\n\n");
+//Stage 2 - Looking for the cube
  while ((foundCube == 0) && (foundWall == 1)){ 
    //Activate all three ultrasonic sensors and determine their readings 
-   Ping3();
-   Ping2(); 
-   Ping1();
-   delay(500);
-   Serial.print("First Tracker: "); Serial.print(ul_Echo_Time); Serial.print("\n");
+   Ping3(); Ping2(); Ping1();
+ //  delay(100);
+   Serial.print("TWO First Tracker: "); Serial.print(ul_Echo_Time); Serial.print("\n");
    Serial.print("Second Tracker: "); Serial.print(ul_Echo_TimeTwo); Serial.print("\n");
    Serial.print("Third Tracker: "); Serial.print(ul_Echo_TimeThree); Serial.print("\n");
 
-//Case 1 - Found the cube
-if ((ul_Echo_TimeThree>850) &&(ul_Echo_TimeThree <980)){
-  Serial.print ("Case 1 FOUND THE CUBE\n\n");  
+
+//Case 2.1 - Found the cube
+if ((ul_Echo_TimeThree>100) &&(ul_Echo_TimeThree <980)){
+  Serial.print ("Case 2.1 - Found The Cube \n\n");  
 servo_RightMotor.writeMicroseconds(ui_Motors_Stop);
 servo_LeftMotor.writeMicroseconds(ui_Motors_Stop);
-void GrabTheCube();
-foundCube = 1;
 
 Ping3();
-if((ul_Echo_TimeThree>720) &&(ul_Echo_TimeThree <850)){
-  foundCube = 0;
-}}
-
-//Case 2 - Straight forward - right distance from the wall and not turning 
-else if ((ul_Echo_Time > 450) && (ul_Echo_TimeTwo >= 220) && (ul_Echo_TimeTwo <= 310)){
-  Serial.print ("Case 2 DRIVE STRAIGHT\n\n");
-  servo_RightMotor.writeMicroseconds(ui_Motors_Top_Speed);
-  servo_LeftMotor.writeMicroseconds(ui_Motors_Top_Speed);
+while (ul_Echo_TimeThree <400){
+  servo_RightMotor.writeMicroseconds(1800);
+servo_LeftMotor.writeMicroseconds(1800);
+delay(10);
+  Ping3();
 }
-
-//Case 3 - Too far from wall, turn in towards wall
-else if ((ul_Echo_TimeTwo > 310) && (ul_Echo_Time > 450)  && (ul_Echo_Time < 600)){
-  Serial.print("Case 3 MOVE IN\n\n");
-  servo_RightMotor.writeMicroseconds(1600);
-  servo_LeftMotor.writeMicroseconds(1800);
-  //delay(10);
-}
-
-//Case 4 - Too close to wall, turn away from wall 
-else if ((ul_Echo_TimeTwo < 220) && (ul_Echo_Time > 450) && (ul_Echo_Time < 600) && (ul_Echo_TimeTwo !=0)){
-  Serial.print("Case 4 MOVE AWAY\n\n");
-   servo_RightMotor.writeMicroseconds(1800);
-   servo_LeftMotor.writeMicroseconds(1600);
-   //delay(10);
-}
-
-//Case 5 - At a corner, turn around the corner 
-else if (ul_Echo_Time <=450 && (ul_Echo_Time != 0)){
-  Serial.print("Case 5 CORNER\n\n");
-  TurnCorner();
-
-  
-}
-
-//Case 6 - Nowhere to be found 
-else if (( (ul_Echo_Time > 600) || (ul_Echo_Time == 0)) &&(ul_Echo_TimeTwo > 450)){
-    Serial.print(" CASE 6 LOST \n\n");
-    foundWall = 0;    
+while (ul_Echo_TimeThree > 1200){
+ servo_RightMotor.writeMicroseconds(1300);
+servo_LeftMotor.writeMicroseconds(1300);
+delay(10);
+  Ping3();
 }
 
 
-
-  }
-    Serial.print("END OF FINDING CUBE\n\n");
-  
-  while (foundCube == 1){
-//Case 1 - DRIVE STRAIGHT
-if ( (ul_Echo_Time > 450) ){
-  Serial.print ("Case 2 DRIVE STRAIGHT\n\n");
-  servo_RightMotor.writeMicroseconds(ui_Motors_Top_Speed);
-  servo_LeftMotor.writeMicroseconds(ui_Motors_Top_Speed);
-  
-} 
-
-//Case 2 - FOUND A SURFACE
-else if (ul_Echo_Time < 450) {
-//Determine if there is a pyramid, and if it's the right one
-Serial.print("Think we found a pyramid, double checking\n");
-      servo_RightMotor.writeMicroseconds(1500);
-      servo_LeftMotor.writeMicroseconds(1500);
-      delay(100);
-
-//Infrared on left side - Communicates with other microcontroller 
-//2 - Wrong Pyramid 
-//1 - Right Pyramid
-//0 - No Pyramid :( 
-byte sensorVal = Serial.read();
-int LeftSensor = sensorVal; //Converts byte to integer
-
-//LOW means pyramid found
-//HIGH means no pyramid
-bool RightSensor = analogRead(A0); 
-
-
-if (RightSensor == 0) {
-Serial.print("It's definitly a pyramid, which one tho\n\n");
-
-int counter2 = 0;
-//Rotate Slightly for other ultrasonic to check 
-while (counter2 < 100 && (sensorVal!=1)){
-//Rotate a little bit at a time
-sensorVal = Serial.read();
-counter++;
-  
-}
-if (sensorVal == 1){
-Serial.print("Right Pyramid\n\n");
-TipThePyramid();
-  
-} else {
-Serial.print("Wrong Pyramid\n\n");
-  
-}
-} else if (sensorVal == 1){
- Serial.print("RIGHT PYRAMID but on the left side of robot\n\n"); 
-
-}else if (sensorVal == 2){
- Serial.print("WRONG PYRAMID but on the left side of robot\n\n"); 
-
-}  else if (sensorVal == 0){
-  Serial.print("NO PYRAMID 100% IS A WALL\n\n"); 
-TurnCounter ++;
-TurnCorner(TurnCounter);
-}    
-}
-    
-  
- 
-  
-  }
-}
-
-
-void TipThePyramid(){
-
-
-  
-}
-
-
-void GrabTheCube(){
+servo_RightMotor.writeMicroseconds(ui_Motors_Stop);
+servo_LeftMotor.writeMicroseconds(ui_Motors_Stop);
+ //GET CUBE::::
+ servo_PyramidTipper.write(0);
 delay(2000);
 servo_LeftRightClaw.write(OverWall);
 delay(2000);
@@ -321,6 +267,215 @@ delay(2000);
 servo_UpDownClaw.write(up);
 delay(2000);
 servo_LeftRightClaw.write(OverSlide);
+delay(2000);
+ servo_PyramidTipper.write(180);
+delay(2000);
+foundCube = 1;
+//Double Checking that the cube was found
+delay(300); Ping3();
+if((ul_Echo_TimeThree>850) &&(ul_Echo_TimeThree <980)){
+  foundCube = 0;
+}
+}
+//Case 2.5 - At a corner, turn around the corner 
+else if (ul_Echo_Time <=600 && (ul_Echo_Time != 0)){
+  Serial.print("Case 2.5 - Turn Corner\n\n");
+ servo_RightMotor.writeMicroseconds(2050);
+    servo_LeftMotor.writeMicroseconds(1300);
+    delay(1300);
+   servo_RightMotor.writeMicroseconds(1500);
+   servo_LeftMotor.writeMicroseconds(1500);
+   delay(100);
+}
+//Case 2.2 - Straight forward - right distance from the wall and not turning 
+else if (((ul_Echo_Time > 600) || (ul_Echo_Time== 0) ) && (ul_Echo_TimeTwo > 220) && (ul_Echo_TimeTwo < 310)){
+  Serial.print ("Case 2.2 - Drive Straight\n\n");
+  servo_RightMotor.writeMicroseconds(2050);
+  servo_LeftMotor.writeMicroseconds(2050);
+}
+
+//Case 2.3 - Too far from wall, turn in towards wall
+else if ((ul_Echo_TimeTwo > 310)){
+  Serial.print("Case 2.3 - Too far from wall, move in\n\n");
+  servo_RightMotor.writeMicroseconds(1600);
+  servo_LeftMotor.writeMicroseconds(2050);
+}
+
+//Case 2.4 - Too close to wall, turn away from wall 
+else if ((ul_Echo_TimeTwo < 220)){
+  Serial.print("Case 2.4 - Too Close, move away from wall\n\n");
+   servo_RightMotor.writeMicroseconds(2050);
+   servo_LeftMotor.writeMicroseconds(1600);
+}
+
+//Case 2.6 - Nowhere to be found 
+else if (ul_Echo_TimeTwo > 1500){
+ servo_RightMotor.writeMicroseconds(1500);
+   servo_LeftMotor.writeMicroseconds(1500);
+   delay(200);
+  Ping2();
+  if(ul_Echo_TimeTwo >1500){
+    Serial.print(" CASE 2.6 - Robot is lost, going back to stage 1 to find the wall \n\n");
+    foundWall = 0;    }
+}}
+
+
+  
+    
+//Serial.print("*** STAGE 3 - DELIVER CUBE ***\n\n");
+byte sensorVal = Serial.read();
+int LeftSensor = sensorVal; //Converts byte to integer
+
+while (foundCube == 1){
+    Ping1();
+    sensorVal = Serial.read();
+    LeftSensor = sensorVal; //Converts byte to integer
+    Serial.print("Stage Three - First Tracker: "); Serial.print(ul_Echo_Time); Serial.print("\n");
+    Serial.print("Infrared Reading - "); Serial.print(LeftSensor); Serial.print("\n\n");
+    delay(300);
+ 
+
+//Case 3.1 - Drive straight
+if ( (ul_Echo_Time > 600) && (sensorVal == 0)){
+  Serial.print ("Case 3.1 DRIVE STRAIGHT\n\n");
+  servo_RightMotor.writeMicroseconds(2050);
+  servo_LeftMotor.writeMicroseconds(2050);
+} 
+
+//Case 3.2 - Found a surface from ultrasonic
+else if ( (ul_Echo_Time < 600)  && (ul_Echo_Time !=0)) {
+//Determine if there is a pyramid, and if it's the right one
+      servo_RightMotor.writeMicroseconds(1500);
+      servo_LeftMotor.writeMicroseconds(1500);
+      delay(100);
+      
+int RightChecker = 0;
+int counter7 = 0;
+
+while (counter7<50){
+  RightSensor = analogRead(A0); 
+  counter7++;
+  delay(100);
+  Serial.print("CHECK RIGHT FOR PYRAMID\n");
+  if (RightSensor == 0){
+    RightChecker = 1;
+  }
+}
+
+
+if (RightChecker == 0){
+ Serial.print("Case 3.2a - it's a wall\n\n");
+ FullTurn(TurnCounter);
+  TurnCounter++;
+  
+} else {
+  
+ Serial.print("Case 3.2b - it's a pyramid, checking which one\n\n");
+
+while (counter3<100){
+  sensorVal = Serial.read();
+  delay(10);
+  servo_RightMotor.writeMicroseconds(1300);
+  servo_LeftMotor.writeMicroseconds(1700);
+  if (sensorVal == 2){
+     Serial.print("Wrong Pyramid\n");
+  MoveAroundPyramid();
+  counter3 = 101;
+  }
+  if (sensorVal == 1){
+     Serial.print("Right Pyramid\n");
+ TipThePyramid();
+ counter3 = 101;
+  }
+counter3++;
+}
+  servo_RightMotor.writeMicroseconds(1500);
+  servo_LeftMotor.writeMicroseconds(1500);
+
+}}
+
+
+//CASE 3.3 - Left InfraRed sees the right pyramid
+else if (sensorVal == 1){
+ Serial.print("Case 3.3 - Left infrared right pyramid\n\n"); 
+ TipThePyramid();
+
+}
+
+
+//CASE 3.4 - Left InfraRed sees the right pyramid
+else if (sensorVal == 2){
+ Serial.print("Case 3.4 - Left infrared wrong pyramid\n\n");
+ MoveAroundPyramid(); 
+
+}}}
+
+
+void TipThePyramid(){
+  servo_PyramidTipper.write(180);
+  delay(2000);
+  servo_PyramidTipper.write(100);
+  delay(1000);
+  servo_PyramidTipper.write(10);
+  servo_RightMotor.write(1200);
+  servo_LeftMotor.write(1200);
+  delay(1000);
+  servo_RightMotor.write(1500);
+  servo_LeftMotor.write(1500);
+  delay (500);
+  servo_PyramidTipper.write(60);
+  servo_OpenCloseClaw.write(Opened1);
+  delay (1000);
+  servo_PyramidTipper.write(10);
+  delay(1000);
+}
+
+
+void  MoveAroundPyramid(){
+    servo_RightMotor.writeMicroseconds(1800);
+    servo_LeftMotor.writeMicroseconds(1300);
+    delay(1800);
+    servo_RightMotor.writeMicroseconds(2200);
+    servo_LeftMotor.writeMicroseconds(2200);
+    delay(1000);
+    servo_RightMotor.writeMicroseconds(1300);
+    servo_LeftMotor.writeMicroseconds(1800);
+    delay(1800);
+    servo_RightMotor.writeMicroseconds(2200);
+    servo_LeftMotor.writeMicroseconds(2200);
+    delay(1000);
+    servo_RightMotor.writeMicroseconds(1300);
+    servo_LeftMotor.writeMicroseconds(1800);
+    delay(1800);
+    servo_RightMotor.writeMicroseconds(2200);
+    servo_LeftMotor.writeMicroseconds(2200);
+    delay(1000);
+    servo_RightMotor.writeMicroseconds(1800);
+    servo_LeftMotor.writeMicroseconds(1300);
+    delay(1800);
+    servo_RightMotor.writeMicroseconds(1500);
+    servo_LeftMotor.writeMicroseconds(1500);
+    delay(1000);
+}
+  
+  
+void GrabTheCube(){
+  
+  servo_PyramidTipper.write(100);
+delay(2000);
+servo_LeftRightClaw.write(OverWall);
+delay(2000);
+servo_OpenCloseClaw.write(Opened2);
+delay(2000);
+servo_UpDownClaw.write(down);
+delay(2000);
+servo_OpenCloseClaw.write(Closed);
+delay(2000);
+servo_UpDownClaw.write(up);
+delay(2000);
+servo_LeftRightClaw.write(OverSlide);
+delay(2000);
+ servo_PyramidTipper.write(180);
 delay(2000);
 }
 
@@ -341,10 +496,14 @@ void TurnCorner(){
 }
 
 void FullTurn(int TurnCounter){
+     Serial.print("180 DEGREE TURN WOOHOO \n\n");
   if ((TurnCounter%2) == 0){
-    //EVEN so turn LEFT
+ //ODD so turn LEFT
+turnRight180();
   } else {
-    //ODD so turn RIGHT
+    //EVEN so turn RIGHT
+       
+ turnLeft180();
     
   }
   
@@ -386,3 +545,32 @@ void Ping3(){
   //time that it takes from when the Pin goes HIGH until it goes LOW
   ul_Echo_TimeThree = pulseIn(ci_Ultrasonic_DataThree, HIGH, 10000);
 }
+
+
+void turnRight180(){
+ servo_RightMotor.writeMicroseconds(1300);
+    servo_LeftMotor.writeMicroseconds(2050);
+    delay(1750);
+    servo_RightMotor.writeMicroseconds(1700);
+    servo_LeftMotor.writeMicroseconds(1700);
+    delay (800);
+ servo_RightMotor.writeMicroseconds(1300);
+    servo_LeftMotor.writeMicroseconds(2050);
+    delay(1750);
+    servo_RightMotor.writeMicroseconds(1500);
+     servo_LeftMotor.writeMicroseconds(1500);
+}
+
+void turnLeft180(){
+ servo_RightMotor.writeMicroseconds(2050);
+    servo_LeftMotor.writeMicroseconds(1300);
+    delay(1750);
+    servo_RightMotor.writeMicroseconds(1700);
+    servo_LeftMotor.writeMicroseconds(1700);
+    delay (500);
+ servo_RightMotor.writeMicroseconds(2050);
+    servo_LeftMotor.writeMicroseconds(1300);
+    delay(1750);
+    servo_RightMotor.writeMicroseconds(1500);
+     servo_LeftMotor.writeMicroseconds(1500);
+ }
