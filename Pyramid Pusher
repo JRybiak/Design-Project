@@ -9,6 +9,11 @@ const int ci_Left_Motor = 9;
 const int ui_Motors_Stop = 1500; //Stop
 unsigned int ui_Motors_Top_Speed = 2200; //Full Speed
 
+const int ci_Ultrasonic_PingOne = 2;   //input plug
+const int ci_Ultrasonic_DataOne = 3;   //output plug
+unsigned long ul_Echo_Time;
+void Ping1();
+
 Servo servo_PyramidTipper;
 
 const int pyramidLoc = 13;
@@ -24,6 +29,9 @@ void setup() {
   pinMode(pyramidLoc, OUTPUT);
   servo_PyramidTipper.attach(pyramidLoc);
 
+  pinMode(ci_Ultrasonic_PingOne, OUTPUT);
+  pinMode(ci_Ultrasonic_DataOne, INPUT);
+
   pinMode(ci_Right_Motor, OUTPUT);
   servo_RightMotor.attach(ci_Right_Motor);
   pinMode(ci_Left_Motor, OUTPUT);
@@ -31,20 +39,62 @@ void setup() {
 }
 
 void loop() {
+  // put your main code here, to run repeatedly:
+
   servo_PyramidTipper.write(180);
-  delay(2000);
-  servo_PyramidTipper.write(100);
-  delay(1000);
-  servo_PyramidTipper.write(10);
+  delay (5000);
+  servo_RightMotor.write(2000);
+  servo_LeftMotor.write(1500);
+  delay (250);
+  servo_RightMotor.write(1500);
+  servo_LeftMotor.write(1500);
+  delay (250);
   servo_RightMotor.write(1200);
   servo_LeftMotor.write(1200);
+  delay (667);
+  servo_RightMotor.write(1500);
+  servo_LeftMotor.write(1500);
+  delay (100);
+
+  /*servo_RightMotor.write(2200);
+  servo_LeftMotor.write(2200);
+  delay (2000);
+  servo_RightMotor.write(2300);
+  servo_LeftMotor.write(1000);
+  delay (2000);
+  servo_RightMotor.write(1000);
+  servo_LeftMotor.write(2300);
+  delay (2000);
+  servo_RightMotor.write(1500);
+  servo_LeftMotor.write(1500);
+  delay(10000);*/ //seizure code
+  
+  if (cycle==0){
+  servo_PyramidTipper.write(110);
+  delay(2000);
+  servo_PyramidTipper.write(95);
+  delay(1000);
+  servo_RightMotor.write(1200);
+  servo_LeftMotor.write(1200);
+  delay(100);
+  servo_PyramidTipper.write(0);
   delay(1000);
   servo_RightMotor.write(1500);
   servo_LeftMotor.write(1500);
   delay (500);
-  servo_PyramidTipper.write(60);
-  servo_OpenCloseClaw.write(Opened);
-  delay (1000);
-  servo_PyramidTipper.write(10);
+  servo_PyramidTipper.write(0);
+  delay (500);
+  servo_PyramidTipper.write(20);
+  delay (500);
+  servo_PyramidTipper.write(40);
+  delay (500);
+  servo_PyramidTipper.write(55);
+  delay(500);
+  servo_PyramidTipper.write(65);
+  delay(2000);
+  servo_PyramidTipper.write(0);
   delay(700000);
+  } //tipping code
+
+  cycle++;
 }
