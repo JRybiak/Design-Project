@@ -410,6 +410,19 @@ else if (sensorVal == 2){
 
 }}}
 
+void seizure(){
+  servo_RightMotor.write(2200);
+  servo_LeftMotor.write(2200);
+  delay (2000);
+  servo_RightMotor.write(2300);
+  servo_LeftMotor.write(1000);
+  delay (2000);
+  servo_RightMotor.write(1000);
+  servo_LeftMotor.write(2300);
+  delay (2000);
+  servo_RightMotor.write(1500);
+  servo_LeftMotor.write(1500);
+}
 
 void TipThePyramid(){
   servo_PyramidTipper.write(180);
