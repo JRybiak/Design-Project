@@ -44,16 +44,16 @@ void runRows(){
 
     delay (1000);
     
-    /*do{
+    do{
       Ping1();
-    } while (ul_Echo_Time>400);*/
+    } while (ul_Echo_Time>400);
 
     servo_RightMotor.writeMicroseconds(1500);
     servo_LeftMotor.writeMicroseconds(1500);
 
     turnRight();
 
-    /*if (isPyramid){
+    if (isPyramid){
       if (rightPyramid){
         foundPyramid = 1;
         return;
@@ -71,16 +71,16 @@ void runRows(){
         numTurns++;
       }
       return;
-    }*/
+    }
 }
 
 void turnRight90(){
-   //while (ul_Echo_Time<=400){
-    //Ping1();
+   while (ul_Echo_Time<=400){
+    Ping1();
     servo_RightMotor.writeMicroseconds(1400);
     servo_LeftMotor.writeMicroseconds(1400);
     delay(500);
-   //}
+   }
     servo_RightMotor.writeMicroseconds(1300);
     servo_LeftMotor.writeMicroseconds(1700);
     delay(2700); //2300 is 90
@@ -89,12 +89,12 @@ void turnRight90(){
 }
 
 void turnLeft90(){
-  //while (ul_Echo_Time<=400){
-    //Ping1();
+  while (ul_Echo_Time<=400){
+    Ping1();
     servo_RightMotor.writeMicroseconds(1400);
     servo_LeftMotor.writeMicroseconds(1400);
     delay(500);
-   //}
+   }
     servo_RightMotor.writeMicroseconds(1700);
     servo_LeftMotor.writeMicroseconds(1300);
     delay(2700); //2300 is 90
@@ -103,12 +103,12 @@ void turnLeft90(){
 }
 
 void turnRight180(){
-   //while (ul_Echo_Time<=400){
-    //Ping1();
+   while (ul_Echo_Time<=400){
+    Ping1();
     servo_RightMotor.writeMicroseconds(1400);
     servo_LeftMotor.writeMicroseconds(1400);
     delay(500);
-   //}
+   }
     servo_RightMotor.writeMicroseconds(1300);
     servo_LeftMotor.writeMicroseconds(1700);
      delay(2700); //2300 is 90
@@ -123,12 +123,12 @@ void turnRight180(){
 }
 
 void turnLeft180(){
-  //while (ul_Echo_Time<=400){
-    //Ping1();
+  while (ul_Echo_Time<=400){
+    Ping1();
     servo_RightMotor.writeMicroseconds(1400);
     servo_LeftMotor.writeMicroseconds(1400);
     delay(500);
-   //}
+   }
     servo_RightMotor.writeMicroseconds(1700);
     servo_LeftMotor.writeMicroseconds(1300);
     delay(2700); //2300 is 90
