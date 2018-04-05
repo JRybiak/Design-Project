@@ -31,37 +31,20 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-
-  if (cycle==0){
-  servo_PyramidTipper.write(40);
-  delay(500);
-  servo_PyramidTipper.write(80);
-  delay(7000);}
-
-  cycle++;
-
-  /*servo_PyramidTipper.write(pyramidUp);
-  delay(3000);
-  servo_PyramidTipper.write(pyramidHalf);
-  delay(3000);
-  servo_PyramidTipper.write(pyramidDown);
-  servo_RightMotor.write(2000);
-  servo_LeftMotor.write(2000);
-  delay(500);
+  servo_PyramidTipper.write(180);
+  delay(2000);
+  servo_PyramidTipper.write(100);
+  delay(1000);
+  servo_PyramidTipper.write(10);
+  servo_RightMotor.write(1200);
+  servo_LeftMotor.write(1200);
+  delay(1000);
   servo_RightMotor.write(1500);
   servo_LeftMotor.write(1500);
-  servo_RightMotor.write(2000);
-  servo_LeftMotor.write(2000);
-  servo_PyramidTipper.write(pyramidHalf);
-  servo_RightMotor.write(1500);
-  servo_LeftMotor.write(1500);
+  delay (500);
+  servo_PyramidTipper.write(60);
   servo_OpenCloseClaw.write(Opened);
-  servo_RightMotor.write(1300);
-  servo_LeftMotor.write(1300);
-  servo_PyramidTipper.write(pyramidDown);
-  delay(500);
-  servo_RightMotor.write(1500);
-  servo_LeftMotor.write(1500);
-  servo_PyramidTipper.write(pyramidUp);*/
+  delay (1000);
+  servo_PyramidTipper.write(10);
+  delay(700000);
 }
