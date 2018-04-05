@@ -16,6 +16,9 @@
 #include <I2CEncoder.h>
 #include <SoftwareSerial.h>
 
+unsigned long time1 = 0;
+unsigned long time2 = 0;
+
 
 /*** MOTORS ***/
 //Setup the motors for motion and their encoders, also declare the pins they are connected to 
@@ -76,10 +79,16 @@ const int pyramidHalf = 140;
 const int pyramidUp = 180;
 
 //Additional Variables
-int foundCube = 0;
+int foundCube = 1;
 int counter = 1;
-int foundWall = 0;
+int foundWall = 1;
 int TurnCounter = 1;
+
+int sixcounter = 0;
+int twocounter = 0;
+int threecounter = 0;
+int fourcounter = 0;
+int fivecounter = 0;
 
 //Some additional functions
 void TurnCorner();
@@ -222,6 +231,28 @@ while (foundWall == 0){
 //Serial.print("*** STAGE 2 - FIND CUBE ***\n\n");
 //Stage 2 - Looking for the cube
  while ((foundCube == 0) && (foundWall == 1)){ 
+
+ if (fivecounter > 10 || twocounter > 50 || threecounter > 50 || fourcounter >50 || sixcounter > 50){
+
+ Serial.print("SPECIAL CASE - He's stuck \n\n");
+  servo_RightMotor.write(2200);
+  servo_LeftMotor.write(2200);
+  delay (2000);
+  servo_RightMotor.write(2300);
+  servo_LeftMotor.write(1000);
+  delay (2000);
+  servo_RightMotor.write(1000);
+  servo_LeftMotor.write(2300);
+  delay (2000);
+  servo_RightMotor.write(1500);
+  servo_LeftMotor.write(1500);
+  delay(1000);
+  
+ }
+
+
+
+  
    //Activate all three ultrasonic sensors and determine their readings 
    Ping3(); Ping2(); Ping1();
  //  delay(100);
@@ -277,21 +308,34 @@ if((ul_Echo_TimeThree>850) &&(ul_Echo_TimeThree <980)){
   foundCube = 0;
 }
 }
+
 //Case 2.5 - At a corner, turn around the corner 
 else if (ul_Echo_Time <=600 && (ul_Echo_Time != 0)){
   Serial.print("Case 2.5 - Turn Corner\n\n");
- servo_RightMotor.writeMicroseconds(2050);
+  servo_RightMotor.writeMicroseconds(2050);
     servo_LeftMotor.writeMicroseconds(1300);
     delay(1300);
    servo_RightMotor.writeMicroseconds(1500);
    servo_LeftMotor.writeMicroseconds(1500);
    delay(100);
+
+ fivecounter ++;  
+ twocounter = 0;  
+ threecounter =0;
+ fourcounter = 0;
+ sixcounter = 0;
+
 }
 //Case 2.2 - Straight forward - right distance from the wall and not turning 
 else if (((ul_Echo_Time > 600) || (ul_Echo_Time== 0) ) && (ul_Echo_TimeTwo > 220) && (ul_Echo_TimeTwo < 310)){
   Serial.print ("Case 2.2 - Drive Straight\n\n");
   servo_RightMotor.writeMicroseconds(2050);
   servo_LeftMotor.writeMicroseconds(2050);
+ twocounter++;
+ threecounter =0;
+ fourcounter = 0;
+ fivecounter = 0;
+ sixcounter = 0;
 }
 
 //Case 2.3 - Too far from wall, turn in towards wall
@@ -299,6 +343,12 @@ else if ((ul_Echo_TimeTwo > 310)){
   Serial.print("Case 2.3 - Too far from wall, move in\n\n");
   servo_RightMotor.writeMicroseconds(1600);
   servo_LeftMotor.writeMicroseconds(2050);
+
+   threecounter ++;
+ twocounter = 0;  
+ fourcounter = 0;
+ fivecounter = 0;
+ sixcounter = 0;
 }
 
 //Case 2.4 - Too close to wall, turn away from wall 
@@ -306,6 +356,11 @@ else if ((ul_Echo_TimeTwo < 220)){
   Serial.print("Case 2.4 - Too Close, move away from wall\n\n");
    servo_RightMotor.writeMicroseconds(2050);
    servo_LeftMotor.writeMicroseconds(1600);
+    fourcounter ++;
+ twocounter = 0;  
+ threecounter =0;
+ fivecounter = 0;
+ sixcounter = 0;
 }
 
 //Case 2.6 - Nowhere to be found 
@@ -314,10 +369,19 @@ else if (ul_Echo_TimeTwo > 1500){
    servo_LeftMotor.writeMicroseconds(1500);
    delay(200);
   Ping2();
-  if(ul_Echo_TimeTwo >1500){
+  if(ul_Echo_TimeTwo >1500) {
     Serial.print(" CASE 2.6 - Robot is lost, going back to stage 1 to find the wall \n\n");
     foundWall = 0;    }
-}}
+
+ sixcounter ++;
+ twocounter = 0;  
+ threecounter =0;
+ fourcounter = 0;
+ fivecounter = 0;
+
+}
+
+}
 
 
   
@@ -333,10 +397,27 @@ while (foundCube == 1){
     Serial.print("Stage Three - First Tracker: "); Serial.print(ul_Echo_Time); Serial.print("\n");
     Serial.print("Infrared Reading - "); Serial.print(LeftSensor); Serial.print("\n\n");
     delay(300);
+
+
+    
+//CASE 3.3 - Left InfraRed sees the right pyramid
+if (sensorVal == 1){
+ Serial.print("Case 3.3 - Left infrared right pyramid\n\n"); 
+ TipThePyramid();
+
+}
+
+
+//CASE 3.4 - Left InfraRed sees the right pyramid
+else if (sensorVal == 2){
+ Serial.print("Case 3.4 - Left infrared wrong pyramid\n\n");
+ MoveAroundPyramid(); 
+
+}
  
 
 //Case 3.1 - Drive straight
-if ( (ul_Echo_Time > 600) && (sensorVal == 0)){
+else if ( (ul_Echo_Time > 600)){
   Serial.print ("Case 3.1 DRIVE STRAIGHT\n\n");
   servo_RightMotor.writeMicroseconds(2050);
   servo_LeftMotor.writeMicroseconds(2050);
@@ -352,7 +433,7 @@ else if ( (ul_Echo_Time < 600)  && (ul_Echo_Time !=0)) {
 int RightChecker = 0;
 int counter7 = 0;
 
-while (counter7<50){
+while (counter7<20){
   RightSensor = analogRead(A0); 
   counter7++;
   delay(100);
@@ -394,35 +475,8 @@ counter3++;
 
 }}
 
+}}
 
-//CASE 3.3 - Left InfraRed sees the right pyramid
-else if (sensorVal == 1){
- Serial.print("Case 3.3 - Left infrared right pyramid\n\n"); 
- TipThePyramid();
-
-}
-
-
-//CASE 3.4 - Left InfraRed sees the right pyramid
-else if (sensorVal == 2){
- Serial.print("Case 3.4 - Left infrared wrong pyramid\n\n");
- MoveAroundPyramid(); 
-
-}}}
-
-void seizure(){
-  servo_RightMotor.write(2200);
-  servo_LeftMotor.write(2200);
-  delay (2000);
-  servo_RightMotor.write(2300);
-  servo_LeftMotor.write(1000);
-  delay (2000);
-  servo_RightMotor.write(1000);
-  servo_LeftMotor.write(2300);
-  delay (2000);
-  servo_RightMotor.write(1500);
-  servo_LeftMotor.write(1500);
-}
 
 void TipThePyramid(){
   servo_PyramidTipper.write(180);
@@ -563,13 +617,13 @@ void Ping3(){
 void turnRight180(){
  servo_RightMotor.writeMicroseconds(1300);
     servo_LeftMotor.writeMicroseconds(2050);
-    delay(1750);
+    delay(1400);
     servo_RightMotor.writeMicroseconds(1700);
     servo_LeftMotor.writeMicroseconds(1700);
-    delay (800);
+    delay (700);
  servo_RightMotor.writeMicroseconds(1300);
     servo_LeftMotor.writeMicroseconds(2050);
-    delay(1750);
+    delay(1400);
     servo_RightMotor.writeMicroseconds(1500);
      servo_LeftMotor.writeMicroseconds(1500);
 }
@@ -577,13 +631,13 @@ void turnRight180(){
 void turnLeft180(){
  servo_RightMotor.writeMicroseconds(2050);
     servo_LeftMotor.writeMicroseconds(1300);
-    delay(1750);
+    delay(1400);
     servo_RightMotor.writeMicroseconds(1700);
     servo_LeftMotor.writeMicroseconds(1700);
-    delay (500);
+    delay (400);
  servo_RightMotor.writeMicroseconds(2050);
     servo_LeftMotor.writeMicroseconds(1300);
-    delay(1750);
+    delay(1400);
     servo_RightMotor.writeMicroseconds(1500);
      servo_LeftMotor.writeMicroseconds(1500);
  }
