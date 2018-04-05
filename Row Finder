@@ -1,0 +1,147 @@
+#include <Servo.h>
+#include <uSTimer2.h>
+
+Servo servo_RightMotor;
+const int ci_Right_Motor = 8;
+Servo servo_LeftMotor;
+const int ci_Left_Motor = 9;
+//Motors speeds 
+const int ui_Motors_Stop = 1500; //Stop
+unsigned int ui_Motors_Top_Speed = 2200; //Full Speed
+
+void followWall();
+void runRows();
+void turnLeft();
+void turnRight();
+
+unsigned int cornersTurned = 1;
+unsigned int numTurns = 0;
+bool foundPyramid = 0;
+
+void setup() {
+  // put your setup code here, to run once:
+  pinMode(ci_Right_Motor, OUTPUT);
+  servo_RightMotor.attach(ci_Right_Motor);
+  pinMode(ci_Left_Motor, OUTPUT);
+  servo_LeftMotor.attach(ci_Left_Motor);
+}
+
+void loop() {
+  //followWall();
+  //***need to add in a global variable for the number of corners turned
+
+ // do{
+     runRows();
+ // } while (!foundPyramid);
+
+  delay (1000000);
+
+}
+
+void runRows(){
+    servo_RightMotor.writeMicroseconds(1700);
+    servo_LeftMotor.writeMicroseconds(1700);
+
+    delay (1000);
+    
+    /*do{
+      Ping1();
+    } while (ul_Echo_Time>400);*/
+
+    servo_RightMotor.writeMicroseconds(1500);
+    servo_LeftMotor.writeMicroseconds(1500);
+
+    turnRight();
+
+    /*if (isPyramid){
+      if (rightPyramid){
+        foundPyramid = 1;
+        return;
+      }
+      goAround();
+    }
+
+    else{
+      if (numTurns%2){
+        turnLeft();
+        numTurns++;
+      }
+      else {
+        turnRight();
+        numTurns++;
+      }
+      return;
+    }*/
+}
+
+void turnRight90(){
+   //while (ul_Echo_Time<=400){
+    //Ping1();
+    servo_RightMotor.writeMicroseconds(1400);
+    servo_LeftMotor.writeMicroseconds(1400);
+    delay(500);
+   //}
+    servo_RightMotor.writeMicroseconds(1300);
+    servo_LeftMotor.writeMicroseconds(1700);
+    delay(2700); //2300 is 90
+    servo_RightMotor.writeMicroseconds(1500);
+    servo_LeftMotor.writeMicroseconds(1500);
+}
+
+void turnLeft90(){
+  //while (ul_Echo_Time<=400){
+    //Ping1();
+    servo_RightMotor.writeMicroseconds(1400);
+    servo_LeftMotor.writeMicroseconds(1400);
+    delay(500);
+   //}
+    servo_RightMotor.writeMicroseconds(1700);
+    servo_LeftMotor.writeMicroseconds(1300);
+    delay(2700); //2300 is 90
+    servo_RightMotor.writeMicroseconds(1500);
+    servo_LeftMotor.writeMicroseconds(1500);
+}
+
+void turnRight180(){
+   //while (ul_Echo_Time<=400){
+    //Ping1();
+    servo_RightMotor.writeMicroseconds(1400);
+    servo_LeftMotor.writeMicroseconds(1400);
+    delay(500);
+   //}
+    servo_RightMotor.writeMicroseconds(1300);
+    servo_LeftMotor.writeMicroseconds(1700);
+     delay(2700); //2300 is 90
+    servo_RightMotor.writeMicroseconds(1700);
+    servo_LeftMotor.writeMicroseconds(1700);
+    delay (500);
+    servo_RightMotor.writeMicroseconds(1300);
+    servo_LeftMotor.writeMicroseconds(1700);
+    delay (2700);
+    servo_RightMotor.writeMicroseconds(1500);
+    servo_LeftMotor.writeMicroseconds(1500);
+}
+
+void turnLeft180(){
+  //while (ul_Echo_Time<=400){
+    //Ping1();
+    servo_RightMotor.writeMicroseconds(1400);
+    servo_LeftMotor.writeMicroseconds(1400);
+    delay(500);
+   //}
+    servo_RightMotor.writeMicroseconds(1700);
+    servo_LeftMotor.writeMicroseconds(1300);
+    delay(2700); //2300 is 90
+    servo_RightMotor.writeMicroseconds(1700);
+    servo_LeftMotor.writeMicroseconds(1700);
+    delay (500);
+    servo_RightMotor.writeMicroseconds(1700);
+    servo_LeftMotor.writeMicroseconds(1300);
+    delay(2700);
+    servo_RightMotor.writeMicroseconds(1500);
+    servo_LeftMotor.writeMicroseconds(1500);
+}
+
+void followWall(){
+  
+}
