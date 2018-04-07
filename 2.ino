@@ -10,7 +10,6 @@
 /*** Included Files ***/
 #include <Servo.h>
 #include <EEPROM.h>
-#include <Wire.h>
 #include <I2CEncoder.h>
 #include <SoftwareSerial.h>
 
@@ -75,12 +74,14 @@ bool RightSensor;
 //Variables to keep track of progression through the program
 int foundCube = 0;
 int foundWall = 0;
-//Counters used in part 2 to keep track of how many times in a row a case is called - helps identify when robot is stuck somewhere
+//Counters used in parts 2 and 3 to keep track of how many times in a row a case is called - helps identify when robot is stuck somewhere
 int twocounter = 0;
 int threecounter = 0;
 int fourcounter = 0;
 int fivecounter = 0;
 int sixcounter = 0;
+int twoCounter = 0;
+int fourCounter = 0;
 //Used in part 3 to keep track of which direction the robot must turn - left or right
 int TurnCounter = 1;
 //Counter used in various while loops throughout the code 
@@ -88,6 +89,9 @@ int counter = 0;
 //Variables for readings from the other microcontroller - holds just the second infrared sensor
 byte sensorVal;
 int LeftSensor;
+//Variable needed to keep track of an infrared sensors' readings
+int RightChecker = 0;
+int LeftTracker = 0;
 
 
 /*** Functions ***/
@@ -426,7 +430,7 @@ else if (sensorVal == 2){
 
 /*** Case 3.3 - Drive straight ***/
 //To continue along the regular path if no pyramid has been found 
-else if ( (ul_Echo_Time > 600)){
+else if ((ul_Echo_Time > 600)){
   //Motors drive straight
   servo_RightMotor.writeMicroseconds(ui_Motors_Slow_Speed);
   servo_LeftMotor.writeMicroseconds(ui_Motors_Slow_Speed);
@@ -437,98 +441,98 @@ else if ( (ul_Echo_Time > 600)){
 
 
 /*** Case 3.4 - Found a surface ***/
+//When the first ultrasonic sensor finds a surface, program must determine 
 else if ((ul_Echo_Time < 600)  && (ul_Echo_Time !=0)) {
-  CounterTWO ++;
-counterFOUR = 0;
 //Determine if there is a pyramid, and if it's the right one
-      servo_RightMotor.writeMicroseconds(1500);
-      servo_LeftMotor.writeMicroseconds(1500);
-      delay(100);
-      
-int RightChecker = 0;
- counter = 0;
-
+      servo_RightMotor.writeMicroseconds(ui_Motors_Stop);
+      servo_LeftMotor.writeMicroseconds(ui_Motors_Stop);
+      delay(100); //Give the wheels time to sop 
+  //Ensure variables are reset incase were used earlier in the program 
+  RightChecker = 0;
+  counter = 0;
+//Sometimes the infrared sensor will say there is no pyramid present, when it actually is.
+//This loop will give the sensor 20 attempts to identify a pyramid
+//From testing the pyramid never says there is a pyramid when there isn't one present
 while (counter<20){
+  //Read the sensor - 0 means a pyramid is found, 1 means no pyramid 
   RightSensor = analogRead(A0); 
+  //Increase counter to keep track of how many readings have been done 
   counter++;
-  delay(100);
-  Serial.print("CHECK RIGHT FOR PYRAMID\n");
+  //if a pyramid is found, change RightChecker to 1 to record this
   if (RightSensor == 0){
     RightChecker = 1;
-  }
-}
-
-
-if (RightChecker == 0){
- Serial.print("Case 3.2a - it's a wall\n\n");
+  }}
+//If surface was a wall, turn 180 degrees and continue path 
+ if (RightChecker == 0){
+  //Function takes turn coutner to keep track of whether robot should turn right or left 
  FullTurn(TurnCounter);
+ //Increase turn counter by 1
   TurnCounter++;
-  
-} else {
-  
- Serial.print("Case 3.2b - it's a pyramid, checking which one\n\n");
-
-int Found222 = 1;
-
+  } 
+//If right infrared found a pyramid, robot must rotate so that left sensor can identify which pyramid is present 
+ else {
+//Reset variables incase they were used earlier in the program 
+LeftTracker = 0;
 counter = 0;
-while (counter<100){
-  sensorVal = Serial.read();
+//This loop will slightly turn 20 times to ensure that the second infrared has the chance to see the pyramid
+while (counter<20){
+  servo_RightMotor.write(ui_Motors_Reverse);
+  servo_LeftMotor.write(ui_Motors_Slow_Speed);
   delay(10);
+  servo_RightMotor.writeMicroseconds(ui_Motors_Stop);
+  servo_LeftMotor.writeMicroseconds(ui_Motors_Stop);
+  //Read the left sensor - 0 means no pyramid, 1 means correct pyramid, 2 means incorrect pyramid
+  sensorVal = Serial.read();
+  //Keep track of the results in the left tracker variable
   if (sensorVal == 2){
-    Found222 =0;
-  counter = 101;
+    LeftTracker = 2;
   }
-  
+   else if (sensorVal == 1){
+    LeftTracker = 1;
+  }
+  //Increase the counter to keep track of how many times the program has run through the loop
   counter++;}
-
-  if (Found222 == 0){
+//If left sensor found the incorrect pyramid
+  if (LeftTracker == 1){
+    //Move around the pyramid
       MoveAroundPyramid();
+//If left sensor found the correct pyramid
   }else {
-  servo_PyramidTipper.write(180);
-  delay (5000);
-  servo_RightMotor.write(1200);
-  servo_LeftMotor.write(1200);
+  //Code to line the robot up with the pyramid 
+  servo_RightMotor.write(ui_Motors_Reverse);
+  servo_LeftMotor.write(ui_Motors_Reverse);
   delay (667);
-  servo_RightMotor.write(1500);
-  servo_LeftMotor.write(1500);
+  servo_RightMotor.write(ui_Motors_Stop);
+  servo_LeftMotor.write(ui_Motors_Stop);
   delay (100);
+  //Tip the pyramid function is called to deliver the cube 
  TipThePyramid();
-  }
-  
-    servo_RightMotor.writeMicroseconds(1500);
-  servo_LeftMotor.writeMicroseconds(1500);
-
-
-}
-
-
+  }}
   //Reset case counters and increase this case's counter by one to ensure robot is not stuck
   twoCounter++;
   fourCounter = 0;
-}
-
-}
-
-}
+}}}
 
 
-
-
+/*** Tip The Pyramid Function ***/
+//This function is called to tip the pyramid 
 void TipThePyramid(){
-  servo_PyramidTipper.write(110);
-  delay(2000);
-  servo_PyramidTipper.write(95);
-  delay(1000);
-  servo_RightMotor.write(1200);
-  servo_LeftMotor.write(1200);
+  //The robot is reversed slightly to line up with the pyramid
+  servo_RightMotor.write(ui_Motors_Reverse);
+  servo_LeftMotor.write(ui_Motors_Reverse);
+  delay (500);
+  //Wheels are stopped 
+  servo_RightMotor.write(ui_Motors_Stop);
+  servo_LeftMotor.write(ui_Motors_Stop);
   delay(100);
-  servo_PyramidTipper.write(0);
+  //Pyramid tipper is lowered 
+  servo_PyramidTipper.write(pyramidUp);
+  delay(2000);
+  servo_PyramidTipper.write(pyramidHalf);
   delay(1000);
-  servo_RightMotor.write(1500);
-  servo_LeftMotor.write(1500);
-  delay (500);
-  servo_PyramidTipper.write(0);
-  delay (500);
+  servo_PyramidTipper.write(pyramidDown);
+  delay(1000);
+  //Pyramid is tipped
   servo_PyramidTipper.write(20);
   delay (500);
   servo_PyramidTipper.write(40);
@@ -537,103 +541,95 @@ void TipThePyramid(){
   delay(500);
   servo_PyramidTipper.write(65);
   delay(2000);
+  //Cube is dropped 
   servo_OpenCloseClaw.write(Opened1);
   delay (2000);
-  servo_PyramidTipper.write(0);
+  //Pyramid is lowered again, on top of the cube
+  servo_PyramidTipper.write(pyramidDown);
+  //Long delay to end the program 
   delay(30000000000);
 }
 
 
+/*** Move Around Pyramid Function ***/
 void  MoveAroundPyramid(){
-    servo_RightMotor.writeMicroseconds(1800);
-    servo_LeftMotor.writeMicroseconds(1300);
+  //this code ensures the robot drives around the pyramid and lines up with its original path 
+    servo_RightMotor.writeMicroseconds(ui_Motors_Slow_Speed);
+    servo_LeftMotor.writeMicroseconds(ui_Motors_Reverse);
     delay(1000);
-    servo_RightMotor.writeMicroseconds(2200);
-    servo_LeftMotor.writeMicroseconds(2200);
+    servo_RightMotor.writeMicroseconds(ui_Motors_Top_Speed);
+    servo_LeftMotor.writeMicroseconds(ui_Motors_Top_Speed);
     delay(800);
-    servo_RightMotor.writeMicroseconds(1300);
-    servo_LeftMotor.writeMicroseconds(1800);
+    servo_RightMotor.writeMicroseconds(ui_Motors_Reverse);
+    servo_LeftMotor.writeMicroseconds(ui_Motors_Slow_Speed);
     delay(1000);
-    servo_RightMotor.writeMicroseconds(2200);
-    servo_LeftMotor.writeMicroseconds(2200);
+    servo_RightMotor.writeMicroseconds(ui_Motors_Top_Speed);
+    servo_LeftMotor.writeMicroseconds(ui_Motors_Top_Speed);
     delay(600);
-    servo_RightMotor.writeMicroseconds(1800);
-    servo_LeftMotor.writeMicroseconds(1300);
+    servo_RightMotor.writeMicroseconds(ui_Motors_Slow_Speed);
+    servo_LeftMotor.writeMicroseconds(ui_Motors_Reverse);
     delay(1000);
-    /*
-    servo_RightMotor.writeMicroseconds(2200);
-    servo_LeftMotor.writeMicroseconds(2200);
-    delay(800);
-    servo_RightMotor.writeMicroseconds(1800);
-    servo_LeftMotor.writeMicroseconds(1300);
-    delay(1000);
-    servo_RightMotor.writeMicroseconds(1500);
-    servo_LeftMotor.writeMicroseconds(1500);
-    delay(1000);*/
+    //Stop the wheels
+    servo_RightMotor.writeMicroseconds(ui_Motors_Stop);
+    servo_LeftMotor.writeMicroseconds(ui_Motors_Stop);
+    delay(100);
 }
   
-  
+
+/*** Grab the Cube Function ***/
 void GrabTheCube(){
+//Counter is reset incase it was used previously
 counter = 0;
+//Inside a loop to repeat 3 times incase the claw tries to grab the cube but it slips out
 while (counter < 3){
+  //Only repeat if there is still a cube waiting to be picked up by the claw
   if((ul_Echo_TimeThree>850) &&(ul_Echo_TimeThree <980)){
-  //GET CUBE::::
- servo_PyramidTipper.write(pyramidHalf);
+//Tipper must be lowered halfway so that it is not in the way of the claw
+servo_PyramidTipper.write(pyramidHalf);
 delay(2000);
+//Claw moves over wall and opens
 servo_LeftRightClaw.write(OverWall);
 delay(2000);
 servo_OpenCloseClaw.write(Opened2);
 delay(2000);
+//Lowers to the wall and closes on the cube
 servo_UpDownClaw.write(down);
 delay(2000);
 servo_OpenCloseClaw.write(Closed);
 delay(2000);
+//Lifts back up and moves over the slide, remaining closed and holding the cube
 servo_UpDownClaw.write(up);
 delay(2000);
 servo_LeftRightClaw.write(OverSlide);
 delay(2000);
- servo_PyramidTipper.write(180);
+//Tippe returns to its original upright position 
+servo_PyramidTipper.write(180);
 delay(2000);
-//Double Checking that the cube was found
+//Double Checking that the cube was found by pinging the third ultrasonic
 delay(300); 
-Ping3();
-
-  } else {counter++; delay(100);}
-
+Ping3();} 
+//If there is no cube left, increase the counter to ensure that the code continues 
+else {
+counter++; 
+delay(100);
+Ping3;}
 }}
 
 
-void TurnCorner(){
-   Serial.print("TURNING THE CORNER\n\n");
-  while (ul_Echo_Time<=400){
-    Ping1();
-  servo_RightMotor.writeMicroseconds(1400);
-  servo_LeftMotor.writeMicroseconds(1400);
-  delay(100); }
- while (ul_Echo_Time<=1000){
-  servo_RightMotor.writeMicroseconds(1700);
-  servo_LeftMotor.writeMicroseconds(1300);
-  delay(200); 
-    Ping1();
-  }
-}
-
+/*** Function to turn 180 degrees ***/
 void FullTurn(int TurnCounter){
-     Serial.print("180 DEGREE TURN WOOHOO \n\n");
+  //If turn counter is even, turn right
   if ((TurnCounter%2) == 0){
- //ODD so turn LEFT
 turnRight180();
-  } else {
-    //EVEN so turn RIGHT
-       
- turnLeft180();
-    
   }
-  
-}
+//If turn counter is odd, turn left
+else {       
+ turnLeft180();
+  }}
 
 
-// Function to get readings from first ultrasonic sensor 
+//*** Ping1, Ping2, and Ping3 Functions ***/
+//To obtain readings from ultrasonic sensor 1 
 void Ping1()
 {
   //Ping Ultrasonic and send the Ultrasonic Range Finder a 10 microsecond pulse per tech spec
@@ -644,9 +640,7 @@ void Ping1()
   //time that it takes from when the Pin goes HIGH until it goes LOW
   ul_Echo_Time = pulseIn(ci_Ultrasonic_DataOne, HIGH, 10000);
 }
-
-
-// Function to get readings from second ultrasonic sensor 
+//To obtain readings from ultrasonic sensor 2
 void Ping2(){
   //Ping Ultrasonic and send the Ultrasonic Range Finder a 10 microsecond pulse per tech spec
   digitalWrite(ci_Ultrasonic_PingTwo, HIGH);
@@ -655,10 +649,8 @@ void Ping2(){
   //use command pulseIn to listen to Ultrasonic_Data pin to record the
   //time that it takes from when the Pin goes HIGH until it goes LOW
   ul_Echo_TimeTwo = pulseIn(ci_Ultrasonic_DataTwo, HIGH, 10000);
-} 
-
-
-// Function to get readings from third ultrasonic sensor 
+}
+//To obtain readings from ultrasonic sensor 3  
 void Ping3(){
   //Ping Ultrasonic and send the Ultrasonic Range Finder a 10 microsecond pulse per tech spec
   digitalWrite(ci_Ultrasonic_PingThree, HIGH);
@@ -670,34 +662,40 @@ void Ping3(){
 }
 
 
+//*** Function to turn right 180 degrees ***/
 void turnRight180(){
- servo_RightMotor.writeMicroseconds(1300);
-    servo_LeftMotor.writeMicroseconds(2050);
+ servo_RightMotor.writeMicroseconds(ui_Motors_Reverse);
+    servo_LeftMotor.writeMicroseconds(ui_Motors_Top_Speed);
     delay(950);
-    servo_RightMotor.writeMicroseconds(1700);
-    servo_LeftMotor.writeMicroseconds(1700);
+    servo_RightMotor.writeMicroseconds(ui_Motors_Slow_Speed);
+    servo_LeftMotor.writeMicroseconds(ui_Motors_Slow_Speed);
     delay (700);
- servo_RightMotor.writeMicroseconds(1300);
-    servo_LeftMotor.writeMicroseconds(2050);
+    servo_RightMotor.writeMicroseconds(ui_Motors_Reverse);
+    servo_LeftMotor.writeMicroseconds(ui_Motors_Top_Speed);
     delay(950);
-    servo_RightMotor.writeMicroseconds(1500);
-     servo_LeftMotor.writeMicroseconds(1500);
+    servo_RightMotor.writeMicroseconds(ui_Motors_Stop);
+    servo_LeftMotor.writeMicroseconds(ui_Motors_Stop);
 }
 
+
+//*** Function to turn left 180 degrees ***/
 void turnLeft180(){
- servo_RightMotor.writeMicroseconds(2050);
-    servo_LeftMotor.writeMicroseconds(1300);
-    delay(1400);
-    servo_RightMotor.writeMicroseconds(1700);
-    servo_LeftMotor.writeMicroseconds(1700);
-    delay (400);
- servo_RightMotor.writeMicroseconds(2050);
-    servo_LeftMotor.writeMicroseconds(1300);
-    delay(1400);
-    servo_RightMotor.writeMicroseconds(1500);
-     servo_LeftMotor.writeMicroseconds(1500);
+ servo_RightMotor.writeMicroseconds(ui_Motors_Top_Speed);
+ servo_LeftMotor.writeMicroseconds(ui_Motors_Reverse);
+ delay(1400);
+ servo_RightMotor.writeMicroseconds(ui_Motors_Slow_Speed);
+ servo_LeftMotor.writeMicroseconds(ui_Motors_Slow_Speed);
+ delay (400);
+ servo_RightMotor.writeMicroseconds(ui_Motors_Top_Speed);
+ servo_LeftMotor.writeMicroseconds(ui_Motors_Reverse);
+ delay(1400);
+ servo_RightMotor.writeMicroseconds(ui_Motors_Stop);
+ servo_LeftMotor.writeMicroseconds(ui_Motors_Stop);
  }
 
+
+//*** Function to determine if a surface is a wall or pyramid ***/
+//Returns 0 for a pyramid, and 1 for a wall
  int PyramidOrWall(){
    //Motion is stopped
       servo_RightMotor.writeMicroseconds(ui_Motors_Stop);
@@ -735,8 +733,6 @@ void turnLeft180(){
       servo_RightMotor.writeMicroseconds(ui_Motors_Stop);
       servo_LeftMotor.writeMicroseconds(ui_Motors_Reverse);
       delay(300);
-
-       /*** Case 1.3a - Found a wall ***/
       //If after the second check a surface is still found, then there was a wall
       if (ul_Echo_Time < 2000){
         //Turn 90 degrees to the left - to position next to wall, with third servo motor over the wall
@@ -754,19 +750,15 @@ void turnLeft180(){
         //This variable will ensure that the first while loop will end because the wall is found
         //The code will now move to the second section - finding the cube
         return(1);
-              }
-              
-        /*** Case 1.3c - Surface was a pyramid ***/
+              }         
+       //When the second check fails, the surface must have been a pyramid
+       //Return 0 to tell the program it was a pyramid 
        else {
-         //When the second check fails, the surface must have been a pyramid
-         //Activate the the function to make the robot travel around a pyramid
          return(0);
-               }}   
-                    
-         /*** Case 1.3b - Surface was a pyramid ***/  
-       else {
-         //When the first check fails, the surface must have been a pyramid
-         //Activate the the function to make the robot travel around a pyramid
+               }}                   
+        //When the first check fails, the surface must have been a pyramid
+        //Return 0 to tell the program it was a pyramid 
+       else { 
          return(0);
         }}
 
