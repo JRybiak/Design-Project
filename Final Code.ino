@@ -378,7 +378,7 @@ while (foundCube == 1){
 //Each counter in the following if statement keeps track of how many times in a row most of the cases in part 3 are called 
 //If one case is called too many times in a row, this if statement contains code to run the motors in a way that will make the 
 //robot become unstuck 
- if ((twoCounter = 0) || (fourCounter == 30)){
+ if ((twoCounter == 30) || (fourCounter == 30)){
    //Code that will get the robot out of wherever it is stuck
   servo_RightMotor.write(ui_Motors_Top_Speed);
   servo_LeftMotor.write(ui_Motors_Top_Speed);
@@ -632,12 +632,13 @@ else {
 //To obtain readings from ultrasonic sensor 1 
 void Ping1()
 {
-  //Ping Ultrasonic and send the Ultrasonic Range Finder a 10 microsecond pulse per tech spec
+  //This ping the ultrasonic sensor to get data from it 
   digitalWrite(ci_Ultrasonic_PingOne, HIGH);
-  delayMicroseconds(10);  //The 10 microsecond pause where the pulse in "high"
+  //The 10 microsecond pause where the pulse in "high"
+  //This is the reason why the minimum distance that can be sensed by the sensor is 3cm 
+  delayMicroseconds(10);  
   digitalWrite(ci_Ultrasonic_PingOne, LOW);
-  //use command pulseIn to listen to Ultrasonic_Data pin to record the
-  //time that it takes from when the Pin goes HIGH until it goes LOW
+  //Sets ul_Echo_Time equal to the amount of time in microsecnds that it took for the sound to return 
   ul_Echo_Time = pulseIn(ci_Ultrasonic_DataOne, HIGH, 10000);
 }
 //To obtain readings from ultrasonic sensor 2
@@ -761,4 +762,3 @@ void turnLeft180(){
        else { 
          return(0);
         }}
-
